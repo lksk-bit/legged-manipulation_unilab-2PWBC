@@ -150,9 +150,6 @@ class CurriculumConfig:
 
 @dataclass
 class RewardParameters:
-    pitch_penalty_sigma: float = 0.25
-    roll_penalty_sigma: float = 0.25
-    attitude_penalty_min_ratios: dict[str, float] = field(default_factory=dict)
     phase_transition_width: float = 0.03
     tracking_sigma: float = 0.25
     base_height_target: float = 0.3

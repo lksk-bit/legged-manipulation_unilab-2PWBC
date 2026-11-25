@@ -1313,11 +1313,6 @@ class ManipLocoReward(ManagerTermBase):
             value = np.sum(contacts[:, :, 0], axis=1)
         else:
             value = self._robot_reward(env, name, command, feet_force, feet_pos, feet_vel)
-        min_ratio = cfg.attitude_penalty_min_ratios.get(name)
-        if min_ratio is not None:
-            pitch, roll = command.pitch_roll.T
-            severity = np.square(pitch / cfg.pitch_penalty_sigma) + np.square(roll / cfg.roll_penalty_sigma)
-            value = value * (min_ratio + (1.0 - min_ratio) * np.exp(-severity))
         value = np.asarray(value, dtype=get_global_dtype())
         if not np.isfinite(value).all():
             raise FloatingPointError(f"2PWBC reward '{name or self._name}' produced NaN/Inf")

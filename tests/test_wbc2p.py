@@ -85,43 +85,6 @@ def test_reward_profiles_are_independent():
     assert "raibert_heuristic" not in l1w.reward
 
 
-def test_go2_attitude_command_relaxes_penalties_in_both_rollouts(runtime):
-    _, env = runtime
-    bridge = TaskBridge(env)
-    task = Task(bridge, False, 0.08)
-    parameters = env.cfg.reward_parameters
-    parameters.only_positive_rewards_ji22_style = False
-    plan = torch.tensor([[0., 0.], [0.3, 0.], [0., -0.3], [0.3, -0.3]], requires_grad=True)
-    plan_np = plan.detach().numpy()
-    decay = torch.exp(-(plan.detach() / 0.25).square().sum(-1))
-    env.step(np.full((4, 18), 0.25, dtype=np.float32))
-    state = torch.from_numpy(bridge.state())
-    command = torch.from_numpy(bridge.current_command())
-    memory = torch.from_numpy(bridge.controller())
-    zero_plan = torch.zeros_like(plan)
-
-    for name, minimum in {
-        "lin_vel_z": 0.5, "ang_vel_xy": 0.7, "base_height": 0.3, "leg_pose": 0.15,
-    }.items():
-        expected = minimum + (1 - minimum) * decay
-        term = env.reward_manager.get_term_cfg(name)
-        bridge.command.set_body_plan(zero_plan.numpy(), zero_plan.numpy())
-        baseline = term.func(env, **term.params)
-        assert np.all(baseline > 0), name
-        bridge.command.set_body_plan(plan_np, zero_plan.numpy())
-        attenuated = term.func(env, **term.params)
-        np.testing.assert_allclose(attenuated, baseline * expected.numpy(), rtol=1e-6)
-
-        task.scales = {name: -1.0}
-        baseline, _ = task.rewards(state, state, command, zero_plan, memory, memory)
-        attenuated, _ = task.rewards(state, state, command, plan, memory, memory)
-        torch.testing.assert_close(attenuated, baseline * expected)
-        gradient, = torch.autograd.grad(attenuated.sum(), plan)
-        torch.testing.assert_close(gradient[0], torch.zeros(2))
-        assert gradient[1, 0] > 0
-        assert gradient[2, 1] < 0
-
-
 @pytest.mark.parametrize("robot", ["go2", "l1w"])
 @pytest.mark.parametrize("stage", ["stage1", "stage2"])
 def test_initial_ee_goal_uses_refreshed_reset_pose(robot, stage, tmp_path, monkeypatch):

@@ -283,15 +283,6 @@ class Task(nn.Module):
             state, command, feet, q[..., 1:5, :], yaw, force, contact_filter, delta_action
         ))
 
-        if cfg.attitude_penalty_min_ratios:
-            pitch_cmd, roll_cmd = plan.unbind(-1)
-            severity = (pitch_cmd / cfg.pitch_penalty_sigma).square() + (
-                roll_cmd / cfg.roll_penalty_sigma
-            ).square()
-            decay = torch.exp(-severity)
-            for name, min_ratio in cfg.attitude_penalty_min_ratios.items():
-                terms[name] = terms[name] * (min_ratio + (1.0 - min_ratio) * decay)
-
         def channel(names):
             vals = torch.stack([self.scales[k] * terms[k] for k in names], -1)
             if cfg.only_positive_rewards_ji22_style:
