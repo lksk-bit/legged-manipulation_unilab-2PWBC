@@ -12,7 +12,7 @@ The same command sequence runs on both robots in MuJoCo. Each robot moves forwar
 | --- | --- |
 | [![Go2 Stage 2 MuJoCo rollout](docs/media/go2-stage2.gif)](docs/media/go2-stage2.gif) | [![L1-W Stage 2 MuJoCo rollout](docs/media/l1w-stage2.gif)](docs/media/l1w-stage2.gif) |
 
-Both GIFs use the locally trained Stage 2 checkpoint `model_34999.pt` for their respective robots.
+Both GIFs use the locally trained Stage 2 checkpoint `model_34999.pt` for their respective robots. The GIFs are included in this repository. To run playback yourself, use a compatible checkpoint from your own training run or an existing local copy.
 
 ## How 2PWBC works
 
@@ -38,7 +38,7 @@ If you already have a compatible checkpoint, set `STAGE2_RUN` to its file path o
 uv run 2pwbc-play --run "${STAGE2_RUN}" --device cpu
 ```
 
-Playback restores the robot and training stage from the checkpoint. Use the up/down arrows for forward/backward, left/right arrows to turn, and `7`/`8` to strafe. In Stage 2, `U`/`J`, `H`/`K`, and `Y`/`O` move the tool target along its three axes. Use `--no-keyboard` to run with sampled task commands.
+When you pass a run directory, playback selects the highest-numbered `model_*.pt` by default. Pass a specific checkpoint file to select an exact iteration. Playback restores the robot and training stage from the selected checkpoint. Use the up/down arrows for forward/backward, left/right arrows to turn, and `7`/`8` to strafe. In Stage 2, `U`/`J`, `H`/`K`, and `Y`/`O` move the tool target along its three axes. Use `--no-keyboard` to run with sampled task commands.
 
 ## Train both stages
 

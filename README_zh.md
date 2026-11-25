@@ -12,7 +12,7 @@
 | --- | --- |
 | [![Go2 Stage 2 MuJoCo 演示](docs/media/go2-stage2.gif)](docs/media/go2-stage2.gif) | [![L1-W Stage 2 MuJoCo 演示](docs/media/l1w-stage2.gif)](docs/media/l1w-stage2.gif) |
 
-演示分别使用两台机器人本地训练的 Stage 2 checkpoint，文件名均为 `model_34999.pt`。
+演示分别使用两台机器人本地训练的 Stage 2 checkpoint，文件名均为 `model_34999.pt`。仓库提供演示 GIF。要运行回放，请使用本地已有的兼容权重，或按下文完成训练后使用生成的权重。
 
 ## 2PWBC 的工作原理
 
@@ -38,7 +38,7 @@ uv run legged-train --task go2 --cfg stage=stage1
 uv run 2pwbc-play --run "${STAGE2_RUN}" --device cpu
 ```
 
-回放会从 checkpoint 恢复机器人和训练阶段。上下方向键控制前后，左右方向键控制转向，`7`/`8` 控制横移。Stage 2 中，`U`/`J`、`H`/`K`、`Y`/`O` 分别沿三个轴移动末端目标。加 `--no-keyboard` 可改用任务自动采样的指令。
+传入运行目录时，回放默认选用编号最大的 `model_*.pt`。要选择指定迭代，请直接传入对应的权重文件。回放会从所选权重恢复机器人和训练阶段。上下方向键控制前后，左右方向键控制转向，`7`/`8` 控制横移。Stage 2 中，`U`/`J`、`H`/`K`、`Y`/`O` 分别沿三个轴移动末端目标。加 `--no-keyboard` 可改用任务自动采样的指令。
 
 ## 两阶段训练
 
