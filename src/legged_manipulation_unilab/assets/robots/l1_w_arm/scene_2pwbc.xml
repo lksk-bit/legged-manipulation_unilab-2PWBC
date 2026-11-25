@@ -1,0 +1,47 @@
+<mujoco model="L1-W + Airbot 2PWBC">
+  <include file="scene_flat.xml"/>
+  <sensor>
+    <contact name="FBL_tire_force" geom1="floor" geom2="FBL_FOOT" data="force" reduce="netforce"/>
+    <contact name="FBL_thigh_contact" geom1="floor" geom2="FBL_hip_col" data="found" num="1" reduce="mindist"/>
+    <contact name="FBL_calf_contact" geom1="floor" geom2="FBL_knee_col" data="found" num="1" reduce="mindist"/>
+    <framelinvel name="FBL_global_linvel" objtype="site" objname="FBL_FOOT"/>
+    <frameyaxis name="FBL_FOOT_axis" objtype="site" objname="FBL_FOOT"/>
+    <contact name="FAR_tire_force" geom1="floor" geom2="FAR_FOOT" data="force" reduce="netforce"/>
+    <contact name="FAR_thigh_contact" geom1="floor" geom2="FAR_hip_col" data="found" num="1" reduce="mindist"/>
+    <contact name="FAR_calf_contact" geom1="floor" geom2="FAR_knee_col" data="found" num="1" reduce="mindist"/>
+    <framelinvel name="FAR_global_linvel" objtype="site" objname="FAR_FOOT"/>
+    <frameyaxis name="FAR_FOOT_axis" objtype="site" objname="FAR_FOOT"/>
+    <contact name="RBL_tire_force" geom1="floor" geom2="RBL_FOOT" data="force" reduce="netforce"/>
+    <contact name="RBL_thigh_contact" geom1="floor" geom2="RBL_hip_col" data="found" num="1" reduce="mindist"/>
+    <contact name="RBL_calf_contact" geom1="floor" geom2="RBL_knee_col" data="found" num="1" reduce="mindist"/>
+    <framelinvel name="RBL_global_linvel" objtype="site" objname="RBL_FOOT"/>
+    <frameyaxis name="RBL_FOOT_axis" objtype="site" objname="RBL_FOOT"/>
+    <contact name="RAR_tire_force" geom1="floor" geom2="RAR_FOOT" data="force" reduce="netforce"/>
+    <contact name="RAR_thigh_contact" geom1="floor" geom2="RAR_hip_col" data="found" num="1" reduce="mindist"/>
+    <contact name="RAR_calf_contact" geom1="floor" geom2="RAR_knee_col" data="found" num="1" reduce="mindist"/>
+    <framelinvel name="RAR_global_linvel" objtype="site" objname="RAR_FOOT"/>
+    <frameyaxis name="RAR_FOOT_axis" objtype="site" objname="RAR_FOOT"/>
+    <jointactuatorfrc name="FBL_ABAD_JOINT_torque" joint="FBL_ABAD_JOINT"/>
+    <jointactuatorfrc name="FBL_HIP_JOINT_torque" joint="FBL_HIP_JOINT"/>
+    <jointactuatorfrc name="FBL_KNEE_JOINT_torque" joint="FBL_KNEE_JOINT"/>
+    <jointactuatorfrc name="FAR_ABAD_JOINT_torque" joint="FAR_ABAD_JOINT"/>
+    <jointactuatorfrc name="FAR_HIP_JOINT_torque" joint="FAR_HIP_JOINT"/>
+    <jointactuatorfrc name="FAR_KNEE_JOINT_torque" joint="FAR_KNEE_JOINT"/>
+    <jointactuatorfrc name="RAR_ABAD_JOINT_torque" joint="RAR_ABAD_JOINT"/>
+    <jointactuatorfrc name="RAR_HIP_JOINT_torque" joint="RAR_HIP_JOINT"/>
+    <jointactuatorfrc name="RAR_KNEE_JOINT_torque" joint="RAR_KNEE_JOINT"/>
+    <jointactuatorfrc name="RBL_ABAD_JOINT_torque" joint="RBL_ABAD_JOINT"/>
+    <jointactuatorfrc name="RBL_HIP_JOINT_torque" joint="RBL_HIP_JOINT"/>
+    <jointactuatorfrc name="RBL_KNEE_JOINT_torque" joint="RBL_KNEE_JOINT"/>
+    <jointactuatorfrc name="FBL_FOOT_JOINT_torque" joint="FBL_FOOT_JOINT"/>
+    <jointactuatorfrc name="FAR_FOOT_JOINT_torque" joint="FAR_FOOT_JOINT"/>
+    <jointactuatorfrc name="RAR_FOOT_JOINT_torque" joint="RAR_FOOT_JOINT"/>
+    <jointactuatorfrc name="RBL_FOOT_JOINT_torque" joint="RBL_FOOT_JOINT"/>
+    <jointactuatorfrc name="joint1_torque" joint="joint1"/>
+    <jointactuatorfrc name="joint2_torque" joint="joint2"/>
+    <jointactuatorfrc name="joint3_torque" joint="joint3"/>
+    <jointactuatorfrc name="joint4_torque" joint="joint4"/>
+    <jointactuatorfrc name="joint5_torque" joint="joint5"/>
+    <jointactuatorfrc name="joint6_torque" joint="joint6"/>
+  </sensor>
+</mujoco>

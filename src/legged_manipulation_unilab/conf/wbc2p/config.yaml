@@ -1,0 +1,84 @@
+defaults:
+  - task: go2/mujoco
+  - _self_
+
+stage: stage1
+
+algo:
+  algo: wbc2p
+  algo_log_name: wbc2p
+  seed: 1
+  num_envs: 1024
+  num_steps_per_env: 24
+  # When set, overrides the fixed collection length for each learning update.
+  utd: null
+  max_iterations: 1000
+  save_interval: 100
+  load_run: "-1"
+  checkpoint: -1
+
+training:
+  devices: null
+  device: null
+  log_root: logs/2pwbc-mujoco
+  log_dir: null
+  play_only: false
+  live_panel: true
+  compile: false
+  compile_backend: inductor
+
+env:
+  cpu_ids: null
+  post_step_forward_sensor: true
+  adaptive_chunk_size: true
+  chunk_size: null
+  arm_stage:
+    freeze_arm_joints: ${wm_stage1:${stage}}
+    disable_ee_goal_trajectory: ${wm_stage1:${stage}}
+  wbc_switch:
+    world_model_control: true
+
+interactive:
+  speed: 1.0
+  start_paused: false
+  keyboard: false
+  keyboard_step_lin: 0.1
+  keyboard_step_ang: 0.2
+  keyboard_step_ee: 0.02
+
+world_model:
+  representation: gencoord
+  hidden_dims: [2048, 2048, 2048]
+  prediction_window: 8
+  batch_size: 256
+  updates: 4
+  learning_rate: 0.0002
+
+replay:
+  capacity: 256
+  storage_device: learner
+  warmup_steps: 64
+  exploration_std: 0.2
+  planner_exploration_std: 0.2
+
+bptt:
+  horizon: 32
+  batch_size: 256
+  gamma: 0.99
+  lam: 0.95
+  critic_epochs: 5
+  termination_softness: 0.08
+
+policy:
+  hidden_dims: [256, 256, 128]
+  history_length: 30
+  planner_scale: 0.4
+  plan_vel: false
+
+cooperation:
+  beta: 0.5
+
+optimizer:
+  arm_lr: 0.0002
+  leg_lr: 0.0002
+  critic_lr: 0.0002

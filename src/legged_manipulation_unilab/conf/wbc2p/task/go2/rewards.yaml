@@ -1,0 +1,211 @@
+# @package _global_
+reward_implementation:
+  mujoco: legged_manipulation_unilab.tasks.go2_arm.manager_env.Go2ArmReward
+  imagined: legged_manipulation_unilab.tasks.go2_arm.rewards.Go2ImaginedRewards
+
+reward:
+  tracking_lin_vel:
+    func: ${reward_implementation.mujoco}
+    weight: 1.0
+    params:
+      name: tracking_lin_vel
+  tracking_ang_vel:
+    func: ${reward_implementation.mujoco}
+    weight: 0.5
+    params:
+      name: tracking_ang_vel
+  lin_vel_z:
+    func: ${reward_implementation.mujoco}
+    weight: -5.0
+    params:
+      name: lin_vel_z
+  ang_vel_xy:
+    func: ${reward_implementation.mujoco}
+    weight: -0.01
+    params:
+      name: ang_vel_xy
+  roll:
+    func: ${reward_implementation.mujoco}
+    weight: 0.0
+    params:
+      name: roll
+  base_height:
+    func: ${reward_implementation.mujoco}
+    weight: -0.3
+    params:
+      name: base_height
+  leg_pose:
+    func: ${reward_implementation.mujoco}
+    weight: -0.5
+    params:
+      name: leg_pose
+  action_rate:
+    func: ${reward_implementation.mujoco}
+    weight: -0.01
+    params:
+      name: action_rate
+  mirrorup:
+    func: ${reward_implementation.mujoco}
+    weight: -0.05
+    params: {name: mirrorup}
+  action_smoothness_1:
+    func: ${reward_implementation.mujoco}
+    weight: -0.1
+    params: {name: action_smoothness_1}
+  action_smoothness_2:
+    func: ${reward_implementation.mujoco}
+    weight: -0.1
+    params: {name: action_smoothness_2}
+  feet_slip:
+    func: ${reward_implementation.mujoco}
+    weight: -0.04
+    params: {name: feet_slip}
+  raibert_heuristic:
+    func: ${reward_implementation.mujoco}
+    weight: 0.0
+    params: {name: raibert_heuristic}
+  dof_pos_limits:
+    func: ${reward_implementation.mujoco}
+    weight: -10.0
+    params: {name: dof_pos_limits}
+  stand_still:
+    func: ${reward_implementation.mujoco}
+    weight: 0.0
+    params:
+      name: stand_still
+  stand_action_rate:
+    func: ${reward_implementation.mujoco}
+    weight: -0.05
+    params:
+      name: stand_action_rate
+  contact:
+    func: ${reward_implementation.mujoco}
+    weight: 0.0
+    params:
+      name: contact
+  swing_feet_z:
+    func: ${reward_implementation.mujoco}
+    weight: 5.0
+    params:
+      name: swing_feet_z
+  foot_drag:
+    func: ${reward_implementation.mujoco}
+    weight: 0.0
+    params:
+      name: foot_drag
+  object_distance:
+    func: ${reward_implementation.mujoco}
+    weight: 0.0
+    params:
+      name: object_distance
+  object_distance_l2:
+    func: ${reward_implementation.mujoco}
+    weight: 0.0
+    params:
+      name: object_distance_l2
+  arm_collision:
+    func: ${reward_implementation.mujoco}
+    weight: 0.0
+    params:
+      name: arm_collision
+  orientation:
+    func: ${reward_implementation.mujoco}
+    weight: 0.0
+    params: {name: orientation}
+  torques:
+    func: ${reward_implementation.mujoco}
+    weight: -0.0001
+    params: {name: torques}
+  dof_vel:
+    func: ${reward_implementation.mujoco}
+    weight: -0.0001
+    params: {name: dof_vel}
+  dof_acc:
+    func: ${reward_implementation.mujoco}
+    weight: -2.5e-7
+    params: {name: dof_acc}
+  feet_air_time:
+    func: ${reward_implementation.mujoco}
+    weight: 5.0
+    params: {name: feet_air_time}
+  tracking_contacts_shaped_force:
+    func: ${reward_implementation.mujoco}
+    weight: 0.0
+    params: {name: tracking_contacts_shaped_force}
+  tracking_contacts_shaped_vel:
+    func: ${reward_implementation.mujoco}
+    weight: 0.0
+    params: {name: tracking_contacts_shaped_vel}
+  feet_clearance_cmd_linear:
+    func: ${reward_implementation.mujoco}
+    weight: -0.0
+    params: {name: feet_clearance_cmd_linear}
+  collision:
+    func: ${reward_implementation.mujoco}
+    weight: -5.0
+    params: {name: collision}
+  hip_action_l2:
+    func: ${reward_implementation.mujoco}
+    weight: -0.05
+    params: {name: hip_action_l2}
+  arm_manip_commands_tracking_combine:
+    func: ${reward_implementation.mujoco}
+    weight: 1.0
+    params: {name: arm_manip_commands_tracking_combine}
+  orientation_heuristic:
+    func: ${reward_implementation.mujoco}
+    weight: -2.0
+    params: {name: orientation_heuristic}
+  orientation_control:
+    func: ${reward_implementation.mujoco}
+    weight: -10.0
+    params: {name: orientation_control}
+  arm_control_smoothness_1:
+    func: ${reward_implementation.mujoco}
+    weight: -0.1
+    params: {name: arm_control_smoothness_1}
+  arm_control_limits:
+    func: ${reward_implementation.mujoco}
+    weight: -5.0
+    params: {name: arm_control_limits}
+  arm_energy:
+    func: ${reward_implementation.mujoco}
+    weight: -0.00004
+    params: {name: arm_energy}
+  loco_energy:
+    func: ${reward_implementation.mujoco}
+    weight: -0.00004
+    params: {name: loco_energy}
+  arm_dof_vel:
+    func: ${reward_implementation.mujoco}
+    weight: -0.001
+    params: {name: arm_dof_vel}
+  arm_dof_acc:
+    func: ${reward_implementation.mujoco}
+    weight: -2.5e-6
+    params: {name: arm_dof_acc}
+  arm_action_rate:
+    func: ${reward_implementation.mujoco}
+    weight: -0.1
+    params: {name: arm_action_rate}
+  arm_action_smoothness_1:
+    func: ${reward_implementation.mujoco}
+    weight: -0.1
+    params: {name: arm_action_smoothness_1}
+
+env:
+  imagined_reward_class: ${reward_implementation.imagined}
+  stage2_disabled_rewards: [raibert_heuristic]
+  reward_parameters:
+    pitch_penalty_sigma: 0.1
+    roll_penalty_sigma: 0.25
+    attitude_penalty_min_ratios:
+      lin_vel_z: 0.5
+      ang_vel_xy: 0.2
+      base_height: 0.01
+      leg_pose: 0.05
+    tracking_sigma: 0.25
+    base_height_target: 0.28
+    terminal_body_height: 0.26
+    object_sigma: 0.1
+    target_foot_height: 0.06

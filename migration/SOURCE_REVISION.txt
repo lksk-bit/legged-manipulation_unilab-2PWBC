@@ -1,0 +1,7 @@
+RoboDuet source: /home/pc123456/Projects/4Reference/RoboDuet
+RoboDuet git commit: a7e1528215c048199f90cb69ceb7749a1d745f28
+UniLab base: /home/pc123456/Projects/legged-manipulation_unilab
+UniLab git commit: e1fa5e278f05f9f496d0bd95016e0bb4c4f154b5
+
+The vendor snapshot intentionally excludes the original Isaac Gym resources;
+the migrated runtime uses the packaged MJCF under src/legged_manipulation_unilab/assets.

@@ -1,0 +1,184 @@
+--- a/src/legged_manipulation_unilab/tasks/go2_arm/base.py
++++ b/src/legged_manipulation_unilab/tasks/go2_arm/base.py
+@@ -32,6 +32,9 @@
+     # before action history/rewards, not an arbitrary [-1, 1] safety clamp.
+     clip_actions: float = 100.0
+     simulate_action_latency: bool = False
++    # RoboDuet-only (when enabled by its YAML): low-pass leg position targets
++    # while the base velocity command is stationary. 0.0 disables filtering.
++    stand_action_smoothing: float = 0.0
+     Kp: float = 35.0
+     Kd: float = 0.5
+     leg_kp: float | list[float] | None = 60.0
+--- a/src/legged_manipulation_unilab/tasks/go2_arm/manager_env.py
++++ b/src/legged_manipulation_unilab/tasks/go2_arm/manager_env.py
+@@ -161,6 +161,10 @@
+         self._previous_unclipped_target = np.zeros_like(self._raw_actions)
+         self._last_last_unclipped_target = np.zeros_like(self._raw_actions)
+         self._leg_target_clip_fraction = np.zeros(env.num_envs, dtype=dtype)
++        self._has_previous_leg_target = np.zeros(env.num_envs, dtype=bool)
++        self._stand_action_smoothing = float(cfg_task.control_config.stand_action_smoothing)
++        if not 0.0 <= self._stand_action_smoothing < 1.0:
++            raise ValueError("control_config.stand_action_smoothing must be in [0, 1)")
+ 
+     @property
+     def action_dim(self) -> int:
+@@ -180,6 +184,7 @@
+         self._previous_unclipped_target[ids] = 0.0
+         self._last_last_unclipped_target[ids] = 0.0
+         self._leg_target_clip_fraction[ids] = 0.0
++        self._has_previous_leg_target[ids] = False
+ 
+     def process_actions(self, actions: np.ndarray) -> None:
+         if actions.shape != (self.num_envs, 18):
+@@ -204,6 +209,20 @@
+         leg_action[:, [0, 3, 6, 9]] *= hip_scale
+         leg_target = leg_action * self._task_cfg.control_config.action_scale
+         leg_target += default[:, :12]
++        # Suppress target chatter at zero command without affecting locomotion.
++        # Filtering is applied at the *actuator target* in both training and
++        # playback, so there is no training/deployment control-path mismatch.
++        # The first target after reset is never blended with a zero buffer.
++        alpha = self._stand_action_smoothing
++        if alpha > 0.0:
++            vel_command = _command(self._env).vel_command_b
++            stationary = ~_command(self._env)._command_is_moving(vel_command)
++            blend = stationary & self._has_previous_leg_target
++            if np.any(blend):
++                leg_target[blend] = (
++                    alpha * self._previous_target[blend, :12]
++                    + (1.0 - alpha) * leg_target[blend]
++                )
+         if self._task_cfg.arm_stage.freeze_arm_joints:
+             arm_target = np.broadcast_to(default[:, 12:18], (self.num_envs, 6)).copy()
+         else:
+@@ -248,6 +267,7 @@
+             axis=1,
+         )
+         np.clip(self._target, ranges[:, 0], ranges[:, 1], out=self._target)
++        self._has_previous_leg_target[:] = True
+ 
+     def apply_actions(self) -> None:
+         self._entity.set_joint_position_target(self._target, joint_ids=self._joint_ids)
+@@ -928,6 +948,12 @@
+                 ),
+                 axis=1,
+             )
++        elif name == "stand_action_rate":
++            # Unlike position-to-default stand_still, directly discourages
++            # high-frequency leg commands without locking the stance pose.
++            stationary = ~command._command_is_moving(cmd)
++            delta = env.action_manager.action[:, :12] - env.action_manager.prev_action[:, :12]
++            value = stationary.astype(get_global_dtype()) * np.sum(np.square(delta), axis=1)
+         elif name in {"action_smoothness_1", "action_smoothness_2"}:
+             action_term = env.action_manager.get_term("joint_pos")
+             current_target = action_term._unclipped_target[:, :12]
+--- a/src/legged_manipulation_unilab/training/keyboard_play.py
++++ b/src/legged_manipulation_unilab/training/keyboard_play.py
+@@ -56,8 +56,11 @@
+ _DEFAULT_KEYBOARD_STEP_LIN = 0.2
+ _DEFAULT_KEYBOARD_STEP_ANG = 0.2
+ _DEFAULT_KEYBOARD_STEP_EE = 0.02
+-# Actor observation drops linvel, so body-frame vel_command starts at index 6.
++# Standard Go2Arm frame: gyro(3) + gravity(3) -> command at offset 6.
++# RoboDuet 63-D frame: q(18) + leg_dq(12) + previous_action(18) -> 48.
+ _ACTOR_VEL_COMMAND_OFFSET = 6
++_ROBODUET_VEL_COMMAND_OFFSET = 48
++_ROBODUET_VEL_COMMAND_SCALE = np.array([2.0, 2.0, 0.25], dtype=np.float32)
+ 
+ 
+ class PendingKeyQueue:
+@@ -193,14 +196,18 @@
+ 
+ 
+ def _write_last_frame_command(
+-    obs: np.ndarray | torch.Tensor, command: np.ndarray, history: int
++    obs: np.ndarray | torch.Tensor,
++    command: np.ndarray,
++    history: int,
++    *,
++    command_offset: int = _ACTOR_VEL_COMMAND_OFFSET,
+ ) -> None:
+-    """Overwrite vel_command in the newest actor-history frame (in-place)."""
+-    if obs.ndim != 2 or obs.shape[1] < _ACTOR_VEL_COMMAND_OFFSET + 3:
++    """Overwrite the *correct, scaled* newest-frame velocity command."""
++    if obs.ndim != 2 or obs.shape[1] < command_offset + 3:
+         return
+     width = int(obs.shape[1])
+     one_step = width // history if history > 0 and width % history == 0 else width
+-    start = width - one_step + _ACTOR_VEL_COMMAND_OFFSET
++    start = width - one_step + command_offset
+     end = start + 3
+     if start < 0 or end > width:
+         return
+@@ -216,20 +223,29 @@
+     if session.obs is None:
+         return
+     history = _actor_history_length(session.env)
++    task_cfg = getattr(session.env, "cfg", None)
++    if task_cfg is None:
++        task_cfg = getattr(session.env, "_cfg", None)
++    switch = getattr(task_cfg, "roboduet_switch", None)
++    is_roboduet = bool(getattr(switch, "use_unified_observation", False))
++    command_offset = _ROBODUET_VEL_COMMAND_OFFSET if is_roboduet else _ACTOR_VEL_COMMAND_OFFSET
+     vel = np.asarray(command.vel_command_b[0], dtype=np.float32)
++    if is_roboduet:
++        # Must match Go2ArmObservation._raw_observation(), not just its offset.
++        vel = vel * _ROBODUET_VEL_COMMAND_SCALE
+     obs = session.obs
+     if isinstance(obs, torch.Tensor):
+-        _write_last_frame_command(obs, vel, history)
++        _write_last_frame_command(obs, vel, history, command_offset=command_offset)
+     else:
+         for key in ("actor", "policy"):
+             tensor = obs.get(key) if hasattr(obs, "get") else None
+             if isinstance(tensor, torch.Tensor):
+-                _write_last_frame_command(tensor, vel, history)
++                _write_last_frame_command(tensor, vel, history, command_offset=command_offset)
+     state = getattr(session.env, "state", None)
+     env_obs = getattr(state, "obs", None)
+     mapped = env_obs.get("obs") if isinstance(env_obs, dict) else None
+     if isinstance(mapped, np.ndarray):
+-        _write_last_frame_command(mapped, vel, history)
++        _write_last_frame_command(mapped, vel, history, command_offset=command_offset)
+ 
+ 
+ def push_keyboard_command(
+--- a/src/legged_manipulation_unilab/conf/ppo/task/roboduet/mujoco.yaml
++++ b/src/legged_manipulation_unilab/conf/ppo/task/roboduet/mujoco.yaml
+@@ -102,6 +102,11 @@
+     weight: 0.0
+     params:
+       name: stand_still
++  stand_action_rate:
++    func: legged_manipulation_unilab.tasks.go2_arm.manager_env.Go2ArmReward
++    weight: -0.05
++    params:
++      name: stand_action_rate
+   contact:
+     func: legged_manipulation_unilab.tasks.go2_arm.manager_env.Go2ArmReward
+     weight: 0.0
+@@ -217,6 +222,9 @@
+     weight: -0.1
+     params: {name: arm_action_smoothness_1}
+ env:
++  # Reference RoboDuet: 200 Hz physics / 50 Hz policy (4 substeps).
++  sim_dt: 0.005
++  ctrl_dt: 0.02
+   history:
+     # RoboDuet Unified2ActorCritic consumes 15 one-step frames.
+     num_actor_history: 15
+@@ -264,6 +272,13 @@
+     - 0.0
+     - 0.25
+   control_config:
++    # Reference leg PD is 35/1 (vendor/roboduet/go1_gym/envs/go1/asset_config.py).
++    # These gains are given to the UniLab backend at environment creation.
++    leg_kp: 35.0
++    leg_kd: 1.0
++    # Low-pass raw leg target only when the commanded body velocity is zero.
++    # This also affects existing checkpoints during play, without retraining.
++    stand_action_smoothing: 0.75
+     # RoboDuet cooperative policy: the six arm outputs are joint-position
+     # residuals around the XML default pose.  Do not route them through IK.
+     arm_action_mode: raw
