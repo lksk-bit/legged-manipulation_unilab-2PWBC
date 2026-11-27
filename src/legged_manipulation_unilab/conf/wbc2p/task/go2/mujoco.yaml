@@ -57,7 +57,7 @@ env:
     - 0.0
     - 0.25
   control_config:
-    # Reference leg PD is 35/1 (vendor/roboduet/go1_gym/envs/go1/asset_config.py).
+    # RoboDuet's reference leg PD gains are 35/1.
     # These gains are given to the UniLab backend at environment creation.
     leg_kp: 40.0
     leg_kd: 1.0
