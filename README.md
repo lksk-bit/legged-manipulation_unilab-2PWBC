@@ -14,6 +14,17 @@ The same command sequence runs on both robots in MuJoCo. Each robot moves forwar
 
 Both GIFs use the locally trained Stage 2 checkpoint `model_34999.pt` for their respective robots. The GIFs are included in this repository. To run playback yourself, use a compatible checkpoint from your own training run or an existing local copy.
 
+### Leg–arm coordination expands the reachable workspace
+
+Both robots reach forward, sweep close to the floor, and lift the tool back up. Go2 holds a zero base velocity command and adjusts its posture in place. L1-W is commanded to move forward at **0.20 m/s** for **2 s**, then adds a **+0.20 rad/s** left-turn command for **2 s** while keeping the forward speed command. Each 4-second clip displays measured tool reach and height.
+
+| Go2 + Airbot · Quadruped | L1-W + Airbot · Wheel-legged |
+| --- | --- |
+| [![Go2 Stage 2 low forward reach](docs/media/go2-stage2-low-reach.gif)](docs/media/go2-stage2-low-reach.gif) | [![L1-W Stage 2 low forward reach](docs/media/l1w-stage2-low-reach.gif)](docs/media/l1w-stage2-low-reach.gif) |
+| Max reach **63.6 cm**, min height **3.1 cm** | Max reach **63.0 cm**, min height **5.3 cm** |
+
+Go2 uses the original demo’s Stage 2 checkpoint (`model_34999.pt` from the November 24 run). L1-W uses the Stage 2 `model_34999.pt` from the November 25 run.
+
 ## How 2PWBC works
 
 - **Whole-body control.** The arm policy produces arm joint targets and plans body pitch and roll. The locomotion policy takes that plan in the same control step, alongside the commanded base velocity, so the base can adjust its posture as the arm reaches.

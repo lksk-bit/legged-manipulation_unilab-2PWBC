@@ -48,7 +48,7 @@ reward:
       name: tracking_ang_vel
   lin_vel_z:
     func: ${reward_implementation.mujoco}
-    weight: -100.0
+    weight: -10.0
     params:
       name: lin_vel_z
   ang_vel_xy:
@@ -63,12 +63,12 @@ reward:
       name: roll
   base_height:
     func: ${reward_implementation.mujoco}
-    weight: -10.0
+    weight: -5.0
     params:
       name: base_height
   leg_pose:
     func: ${reward_implementation.mujoco}
-    weight: -1.9
+    weight: -1.5
     params:
       name: leg_pose
   action_rate:
@@ -98,7 +98,7 @@ reward:
     params: {name: dof_pos_limits}
   stand_still:
     func: ${reward_implementation.mujoco}
-    weight: -0.8
+    weight: -1.0
     params:
       name: stand_still
   stand_action_rate:
